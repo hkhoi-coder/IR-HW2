@@ -39,12 +39,31 @@ public class SearchEngine {
         dataFiles = (new File(DATA_DIR)).listFiles();
 
         loadStopWords();
+        buildInvertedIndex();
     }
 
-    public void buildInvertedIndex() throws FileNotFoundException, IOException {
+    private void buildInvertedIndex() throws FileNotFoundException, IOException {
         for (int i = 0; i < dataFiles.length; ++i) {
             loadTermsFromFile(i);
         }
+    }
+
+    public List<String> queryInvertedIndex(String term) {
+        BitSet bitSet = fullInvertedIndex.get(term);
+
+        if (bitSet == null) {
+            return null;
+        }
+
+        List<String> result = new ArrayList<>();
+
+        for (int i = 0; i < bitSet.length(); ++i) {
+            if (bitSet.get(i)) {
+                result.add(dataFiles[i].getName());
+            }
+        }
+
+        return result;
     }
 
     private void loadStopWords() throws FileNotFoundException, IOException {
@@ -93,7 +112,7 @@ public class SearchEngine {
         Collections.shuffle(list);
         return list.subList(0, num);
     }
-    
+
     /* TESTING SECTION */
     
     public void testInvertedIndex() throws FileNotFoundException {
@@ -107,16 +126,16 @@ public class SearchEngine {
 
     public void testContainsStopWords() {
         for (String it : stopWordSet) {
-            if (fullInvertedIndex.containsKey(it) ||
-                    it.charAt(0) == '\'' ||
-                    it.charAt(it.length() - 1) == '\'') {
+            if (fullInvertedIndex.containsKey(it)
+                    || it.charAt(0) == '\''
+                    || it.charAt(it.length() - 1) == '\'') {
                 System.out.println("ERROR: " + it);
             }
         }
 
         System.out.println("TEST #2 DONE");
     }
-    
+
     public void testRandomWords() throws FileNotFoundException {
         String[] fileNames = {"RANDOM_0", "RANDOM_1", "RANDOM_2", "RANDOM_3"};
         for (String itFileName : fileNames) {
@@ -126,5 +145,9 @@ public class SearchEngine {
             }
             out.close();
         }
+    }
+
+    public TreeMap<String, BitSet> getFullInvertedIndex() {
+        return fullInvertedIndex;
     }
 }
