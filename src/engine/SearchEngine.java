@@ -44,7 +44,6 @@ public class SearchEngine {
     }
 
     /* PART 1 AND 2 */
-    
     private void buildInvertedIndex() throws FileNotFoundException, IOException {
         for (int i = 0; i < dataFiles.length; ++i) {
             loadTermsFromFile(i);
@@ -99,7 +98,7 @@ public class SearchEngine {
                     if (!normalized.isEmpty() && normalized.charAt(normalized.length() - 1) == '\'') {
                         normalized = normalized.substring(0, normalized.length() - 1);
                     }
-                    
+
                     if (!normalized.isEmpty() && !stopWordSet.contains(normalized)) {
                         if (!fullInvertedIndex.containsKey(normalized)) {
                             fullInvertedIndex.put(normalized, new TriDict());
@@ -119,17 +118,21 @@ public class SearchEngine {
     }
 
     /* PART 3 */
-    public TreeMap<String, Integer> TermFrequency(int docId, List<String> words) {
-        HashSet<String> cache = new HashSet<>(words);
-        File curFile = dataFiles[docId];
-        
-        
-        
-        return null;
+    public TreeMap<String, Integer> getTermFrequency(int docId, List<String> words) {
+        TreeMap<String, Integer> result = new TreeMap<>();
+
+        for (String itWord : words) {
+            Integer value = fullInvertedIndex.get(itWord).getIdFreq().get(docId);
+            if (value == null) {
+                value = 0;
+            }
+            result.put(itWord, value);
+        }
+
+        return result;
     }
-    
+
     /* TESTING SECTION */
-    
     public void testInvertedIndex() throws FileNotFoundException {
         PrintWriter out = new PrintWriter(new FileOutputStream("TEST_INVERTEDINDEX", false));
         for (Map.Entry<String, TriDict> it : fullInvertedIndex.entrySet()) {
@@ -163,14 +166,33 @@ public class SearchEngine {
     }
 
     public void testFileIds() throws FileNotFoundException {
-        PrintWriter out =
-                new PrintWriter(new FileOutputStream("FILE_INDEX"), false);
-        
+        PrintWriter out
+                = new PrintWriter(new FileOutputStream("FILE_INDEX"), false);
+
         for (int i = 0; i < dataFiles.length; ++i) {
             out.println(i + ": " + dataFiles[i].getName());
         }
+
+        out.close();
+    }
+
+    public void testTermFreq(int docId) throws FileNotFoundException {
+        PrintWriter out
+                = new PrintWriter(new FileOutputStream("TERM_FREQ"), false);
+        
+        List<String> test = new ArrayList<>();
+        test.add("beijing");
+        test.add("aa");
+        
+        List<String> randomWords = test;
+        TreeMap<String, Integer> result = getTermFrequency(docId, randomWords);
+        
+        for (Map.Entry<String, Integer> it : result.entrySet()) {
+            out.println(it.getKey() + "->" + it.getValue());
+        }
         
         out.close();
+        System.out.println("TEST 5 DONE");
     }
     
     public TreeMap<String, TriDict> getFullInvertedIndex() {
