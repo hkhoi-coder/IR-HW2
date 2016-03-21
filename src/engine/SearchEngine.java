@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import model.TriDict;
 import util.QuickScan;
 
 /**
@@ -29,7 +30,7 @@ public class SearchEngine {
 
     private final HashSet<String> stopWordSet;
 
-    private final TreeMap<String, BitSet> fullInvertedIndex;
+    private final TreeMap<String, TriDict> fullInvertedIndex;
 
     private final File[] dataFiles;
 
@@ -42,6 +43,8 @@ public class SearchEngine {
         buildInvertedIndex();
     }
 
+    /* PART 1 AND 2 */
+    
     private void buildInvertedIndex() throws FileNotFoundException, IOException {
         for (int i = 0; i < dataFiles.length; ++i) {
             loadTermsFromFile(i);
@@ -49,7 +52,7 @@ public class SearchEngine {
     }
 
     public List<String> queryInvertedIndex(String term) {
-        BitSet bitSet = fullInvertedIndex.get(term);
+        BitSet bitSet = fullInvertedIndex.get(term).getBitSet();
 
         if (bitSet == null) {
             return null;
@@ -96,11 +99,13 @@ public class SearchEngine {
                     if (!normalized.isEmpty() && normalized.charAt(normalized.length() - 1) == '\'') {
                         normalized = normalized.substring(0, normalized.length() - 1);
                     }
+                    
                     if (!normalized.isEmpty() && !stopWordSet.contains(normalized)) {
                         if (!fullInvertedIndex.containsKey(normalized)) {
-                            fullInvertedIndex.put(normalized, new BitSet());
+                            fullInvertedIndex.put(normalized, new TriDict());
                         }
-                        fullInvertedIndex.get(normalized).set(id);
+                        fullInvertedIndex.get(normalized).setBitSet(id);
+                        fullInvertedIndex.get(normalized).increaseFreq(id);
                     }
                 }
             }
@@ -113,11 +118,21 @@ public class SearchEngine {
         return list.subList(0, num);
     }
 
+    /* PART 3 */
+    public TreeMap<String, Integer> TermFrequency(int docId, List<String> words) {
+        HashSet<String> cache = new HashSet<>(words);
+        File curFile = dataFiles[docId];
+        
+        
+        
+        return null;
+    }
+    
     /* TESTING SECTION */
     
     public void testInvertedIndex() throws FileNotFoundException {
         PrintWriter out = new PrintWriter(new FileOutputStream("TEST_INVERTEDINDEX", false));
-        for (Map.Entry<String, BitSet> it : fullInvertedIndex.entrySet()) {
+        for (Map.Entry<String, TriDict> it : fullInvertedIndex.entrySet()) {
             out.println(it.getKey() + "->" + it.getValue());
         }
         out.close();
@@ -147,7 +162,18 @@ public class SearchEngine {
         }
     }
 
-    public TreeMap<String, BitSet> getFullInvertedIndex() {
+    public void testFileIds() throws FileNotFoundException {
+        PrintWriter out =
+                new PrintWriter(new FileOutputStream("FILE_INDEX"), false);
+        
+        for (int i = 0; i < dataFiles.length; ++i) {
+            out.println(i + ": " + dataFiles[i].getName());
+        }
+        
+        out.close();
+    }
+    
+    public TreeMap<String, TriDict> getFullInvertedIndex() {
         return fullInvertedIndex;
     }
 }
