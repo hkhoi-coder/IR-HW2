@@ -11,6 +11,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         SearchEngine engine = new SearchEngine();
-        engine.testTermFreq(20);
+        engine.testTermFreq(0);
+        engine.testIntertedTermFreq(0);
     }
 }

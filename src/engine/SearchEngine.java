@@ -118,15 +118,28 @@ public class SearchEngine {
     }
 
     /* PART 3 */
-    public TreeMap<String, Integer> getTermFrequency(int docId, List<String> words) {
-        TreeMap<String, Integer> result = new TreeMap<>();
+    public List<Integer> getTF(int docId, List<String> words) {
+        List<Integer> result = new ArrayList<>();
 
         for (String itWord : words) {
             Integer value = fullInvertedIndex.get(itWord).getIdFreq().get(docId);
             if (value == null) {
                 value = 0;
             }
-            result.put(itWord, value);
+            result.add(value);
+        }
+
+        return result;
+    }
+
+    public List<Double> getIDF(int docId, List<String> words) {
+        List<Double> result = new ArrayList<>();
+
+        for (String itWord : words) {
+            int occurence = fullInvertedIndex.get(itWord).getBitSet().cardinality();
+            double ratio = ((double) dataFiles.length) / occurence;
+            ratio = 1 + Math.log(ratio);
+            result.add(ratio);
         }
 
         return result;
@@ -179,20 +192,31 @@ public class SearchEngine {
     public void testTermFreq(int docId) throws FileNotFoundException {
         PrintWriter out
                 = new PrintWriter(new FileOutputStream("TERM_FREQ"), false);
-        
-        List<String> test = new ArrayList<>();
-        test.add("beijing");
-        test.add("aa");
-        
-        List<String> randomWords = test;
-        TreeMap<String, Integer> result = getTermFrequency(docId, randomWords);
-        
-        for (Map.Entry<String, Integer> it : result.entrySet()) {
-            out.println(it.getKey() + "->" + it.getValue());
+
+        List<String> randomWords = generateRandomDictionary(500);
+        List<Integer> result = getTF(docId, randomWords);
+
+        for (int it : result) {
+            out.println(it);
         }
-        
+
         out.close();
         System.out.println("TEST 5 DONE");
+    }
+
+    public void testIntertedTermFreq(int docId) throws FileNotFoundException {
+        PrintWriter out
+                = new PrintWriter(new FileOutputStream("INVERTED_TERM_FREQ"), false);
+
+        List<String> randomWords = generateRandomDictionary(500);
+        List<Double> result = getIDF(docId, randomWords);
+
+        for (double it : result) {
+            out.println(it);
+        }
+
+        out.close();
+        System.out.println("TEST 6 DONE");
     }
     
     public TreeMap<String, TriDict> getFullInvertedIndex() {
