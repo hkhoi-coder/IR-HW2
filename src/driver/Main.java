@@ -2,7 +2,6 @@ package driver;
 
 import engine.SearchEngine;
 import java.io.IOException;
-import java.util.List;
 
 /**
  *
