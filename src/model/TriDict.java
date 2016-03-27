@@ -33,8 +33,8 @@ public class TriDict {
         return bitSet;
     }
 
-    public TreeMap<Integer, Integer> getIdFreq() {
-        return idFreq;
+    public int getIdFreq(int docId) {
+        return idFreq.get(docId);
     }
 
     @Override

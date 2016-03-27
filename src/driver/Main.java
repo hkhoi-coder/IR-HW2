@@ -2,6 +2,7 @@ package driver;
 
 import engine.SearchEngine;
 import java.io.IOException;
+import java.util.List;
 
 /**
  *
@@ -11,7 +12,5 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         SearchEngine engine = new SearchEngine();
-        engine.testTermFreq(0);
-        engine.testIntertedTermFreq(0);
     }
 }

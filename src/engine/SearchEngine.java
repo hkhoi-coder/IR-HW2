@@ -34,11 +34,14 @@ public class SearchEngine {
 
     private final File[] dataFiles;
 
+    private final int[] terms;
+    
     public SearchEngine() throws IOException {
         stopWordSet = new HashSet<>();
         fullInvertedIndex = new TreeMap<>();
         dataFiles = (new File(DATA_DIR)).listFiles();
-
+        terms = new int[dataFiles.length];
+        
         loadStopWords();
         buildInvertedIndex();
     }
@@ -92,6 +95,7 @@ public class SearchEngine {
             } else {
                 for (String token : curLine.split(REGEX)) {
                     String normalized = token.toLowerCase();
+                    terms[id] += 1;
                     if (!normalized.isEmpty() && normalized.charAt(0) == '\'') {
                         normalized = normalized.substring(1);
                     }
@@ -118,43 +122,33 @@ public class SearchEngine {
     }
 
     /* PART 3 */
-    public List<Integer> getTF(int docId, List<String> words) {
-        List<Integer> result = new ArrayList<>();
+    // For documents
+    public List<Double> getTF_IDF(int fileId) {
+        List<Double> vector = new ArrayList<>();
 
-        for (String itWord : words) {
-            Integer value = fullInvertedIndex.get(itWord).getIdFreq().get(docId);
-            if (value == null) {
-                value = 0;
+        for (Map.Entry<String, TriDict> it : fullInvertedIndex.entrySet()) {
+            // TF
+            int termFrequency = 0;
+            try {
+                termFrequency = it.getValue().getIdFreq(fileId);
+            } catch (NullPointerException e) {
+                // Do nothing
             }
-            result.add(value);
+            
+            double tf = (double) termFrequency / terms[fileId];
+            
+            // IDF
+            int docsContainTerm = it.getValue().getBitSet().cardinality();
+            double ratio = (double) dataFiles.length / docsContainTerm;
+            double idf = Math.log(ratio);
+            
+            vector.add(tf * idf);
         }
 
-        return result;
-    }
-
-    public List<Double> getIDF(int docId, List<String> words) {
-        List<Double> result = new ArrayList<>();
-
-        for (String itWord : words) {
-            int occurence = fullInvertedIndex.get(itWord).getBitSet().cardinality();
-            double ratio = ((double) dataFiles.length) / occurence;
-            ratio = 1 + Math.log(ratio);
-            result.add(ratio);
-        }
-
-        return result;
+        return vector;
     }
 
     /* TESTING SECTION */
-    public void testInvertedIndex() throws FileNotFoundException {
-        PrintWriter out = new PrintWriter(new FileOutputStream("TEST_INVERTEDINDEX", false));
-        for (Map.Entry<String, TriDict> it : fullInvertedIndex.entrySet()) {
-            out.println(it.getKey() + "->" + it.getValue());
-        }
-        out.close();
-        System.out.println("TEST #1 DONE");
-    }
-
     public void testContainsStopWords() {
         for (String it : stopWordSet) {
             if (fullInvertedIndex.containsKey(it)
@@ -188,38 +182,8 @@ public class SearchEngine {
 
         out.close();
     }
-
-    public void testTermFreq(int docId) throws FileNotFoundException {
-        PrintWriter out
-                = new PrintWriter(new FileOutputStream("TERM_FREQ"), false);
-
-        List<String> randomWords = generateRandomDictionary(500);
-        List<Integer> result = getTF(docId, randomWords);
-
-        for (int it : result) {
-            out.println(it);
-        }
-
-        out.close();
-        System.out.println("TEST 5 DONE");
-    }
-
-    public void testIntertedTermFreq(int docId) throws FileNotFoundException {
-        PrintWriter out
-                = new PrintWriter(new FileOutputStream("INVERTED_TERM_FREQ"), false);
-
-        List<String> randomWords = generateRandomDictionary(500);
-        List<Double> result = getIDF(docId, randomWords);
-
-        for (double it : result) {
-            out.println(it);
-        }
-
-        out.close();
-        System.out.println("TEST 6 DONE");
-    }
     
-    public TreeMap<String, TriDict> getFullInvertedIndex() {
-        return fullInvertedIndex;
+    public String getFileName(int docId) {
+        return dataFiles[docId].getName();
     }
 }
