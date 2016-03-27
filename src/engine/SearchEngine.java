@@ -9,12 +9,15 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import model.FileRelevant;
 import model.TriDict;
 import util.QuickScan;
+import util.VectorUtil;
 
 /**
  *
@@ -184,6 +187,44 @@ public class SearchEngine {
         return vector;
     }
 
+    public double relevantDistance(String query, int docId) {
+        List<Double> vectorQuery = getTF_IDF(query);
+        List<Double> vectorDoc = getTF_IDF(docId);
+
+        return VectorUtil.distance(vectorQuery, vectorDoc);
+    }
+
+    public double relevantDistance(List<Double> vectorQuery, int docId) {
+        List<Double> vectorDoc = getTF_IDF(docId);
+        return VectorUtil.distance(vectorQuery, vectorDoc);
+    }
+
+    public double relevantCosine(String query, int docId) {
+        List<Double> vectorQuery = getTF_IDF(query);
+        List<Double> vectorDoc = getTF_IDF(docId);
+
+        return VectorUtil.cosSim(vectorQuery, vectorDoc);
+    }
+
+    public double relevantCosine(List<Double> vectorQuery, int docId) {
+        List<Double> vectorDoc = getTF_IDF(docId);
+        return VectorUtil.cosSim(vectorQuery, vectorDoc);
+    }
+
+    public List<FileRelevant> getRelevantFiles(String query) {
+        List<Double> queryVector = getTF_IDF(query);
+        List<FileRelevant> results = new ArrayList<>();
+        for (int i = 0; i < dataFiles.length; ++i) {
+            System.out.println("Working: " + ((double) i / dataFiles.length) * 100 + "%");
+            double result = relevantCosine(query, i);
+            if (result != 0) {
+                results.add(new FileRelevant(dataFiles[i].getName(), result));
+            }
+        }
+        results.sort(null);
+        return results;
+    }
+
     /* TESTING SECTION */
     public void testContainsStopWords() {
         for (String it : stopWordSet) {
@@ -206,6 +247,7 @@ public class SearchEngine {
             }
             out.close();
         }
+        System.out.println("Generated, word writen in RANDOM_0 -> RANDOM_3");
     }
 
     public void testFileIds() throws FileNotFoundException {
@@ -222,4 +264,21 @@ public class SearchEngine {
     public String getFileName(int docId) {
         return dataFiles[docId].getName();
     }
+
+    public File[] getDataFiles() {
+        return dataFiles;
+    }
+    
+    public void testInvertedIndex(String word) {
+        TriDict result = fullInvertedIndex.get(word);
+        if (result != null) {
+            for (int i = 0; i < result.getBitSet().length(); ++i) {
+                if (result.getBitSet().get(i)) {
+                    System.out.println(dataFiles[i].getName());
+                }
+            }
+        } else {
+            System.out.println("NOPE!");
+        }
+    } 
 }
